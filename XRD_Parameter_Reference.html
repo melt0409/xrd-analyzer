@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XRD Parameter Reference</title>
+
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js">
+</script>
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$']],
+      displayMath: [['$$', '$$']]
+    }
+  };
+</script>
+
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    line-height: 1.6;
+    color: #1a1a1a;
+  }
+  h1, h2, h3 { line-height: 1.3; scroll-margin-top: 1rem; }
+  h1 { border-bottom: 2px solid #ddd; padding-bottom: 0.3rem; }
+  h2 { border-bottom: 1px solid #eee; padding-bottom: 0.2rem; margin-top: 2.5rem; }
+  h3 { margin-top: 1.8rem; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  th, td { border: 1px solid #ddd; padding: 0.5rem 0.8rem; text-align: left; }
+  th { background: #f6f8fa; }
+  code { background: #f6f8fa; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.9em; }
+  blockquote { border-left: 4px solid #ddd; margin: 1rem 0; padding: 0.2rem 1rem; color: #555; background: #fafafa; }
+  hr { border: none; border-top: 1px solid #eee; margin: 2.5rem 0; }
+  a { color: #0969da; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .ref-list { font-size: 0.9em; }
+</style>
+</head>
+<body>
+
+<blockquote>
+<strong>About this page</strong><br>
+This page is the external reference for the formulas and crystallographic rules implemented in <code>xrd_app.py</code>. Each section below has a fixed anchor ID (shown in the URL when you click a heading) so it can be linked to directly from the application &mdash; e.g. a &ldquo;View derivation&rdquo; button next to a field in the GUI. Anchor IDs are stable even if section titles are edited later &mdash; link to the anchor, not the heading text.
+<br><br>
+<strong>Linking convention:</strong> <code>https://&lt;your-github-pages-domain&gt;/XRD_Parameter_Reference.html#&lt;anchor-id&gt;</code>
+</blockquote>
+
+<h1 id="top">XRD Parameter Reference</h1>
+
+<h2 id="sec-1-axis-choices">1. Axis Choices and Physical Meaning</h2>
+
+<h3 id="sec-1-1-two-theta">1.1 2&theta; &mdash; the instrument's measured angle</h3>
+
+<p><strong>Meaning:</strong> This is the raw diffraction angle directly measured by the diffractometer.</p>
+
+<p><strong>Limitation:</strong> 2&theta; depends strongly on the X-ray wavelength &lambda;. If one dataset uses Cu K&alpha; (&lambda; &asymp; 1.54 &Aring;) and another uses Mo K&alpha; (&lambda; &asymp; 0.71 &Aring;), the same crystal will produce peaks at very different 2&theta; positions, so the two patterns cannot be directly overlaid without conversion.<sup><a href="#ref-1">[1]</a></sup></p>
+
+<h3 id="sec-1-2-d-spacing">1.2 d-spacing &mdash; the crystal's fingerprint</h3>
+
+<p><strong>Formula:</strong></p>
+$$d = \frac{\lambda}{2\sin\theta}$$
+
+<p><strong>Meaning:</strong> $d$ is the physical spacing between lattice planes in the crystal, usually expressed in angstroms (&Aring;).</p>
+
+<p><strong>Use:</strong> This is an intrinsic property of the material. No matter what wavelength is used, the same crystal gives the same $d$-spacing values. That is why reference databases such as JCPDS or ICDD PDF cards are commonly matched using $d$-spacing rather than 2&theta;.<sup><a href="#ref-2">[2]</a></sup></p>
+
+<h3 id="sec-1-3-q-vector">1.3 q &mdash; the reciprocal-space language</h3>
+
+<p><strong>Formula:</strong></p>
+$$q = \frac{4\pi\sin\theta}{\lambda}$$
+
+<p><strong>Meaning:</strong> $q$ is the magnitude of the scattering vector in reciprocal space, describing the momentum transfer during diffraction.</p>
+
+<p><strong>Use:</strong> In SAXS, WAXS, neutron diffraction, and synchrotron work, $q$ is often used as the standard x-axis because it allows data collected with different wavelengths to be compared on the same scale.<sup><a href="#ref-3">[3]</a></sup></p>
+
+<h3 id="sec-1-4-sin-theta-lambda">1.4 sin&theta;/&lambda; &mdash; the crystallographic working variable</h3>
+
+<p><strong>Meaning:</strong> This is equivalent to $1/(2d)$, or $q/(4\pi)$.</p>
+
+<p><strong>Use:</strong> In crystallography, atomic scattering factors are often discussed as functions of $\sin\theta/\lambda$, making this a convenient standard variable for refinement and structure analysis.</p>
+
+<hr>
+
+<h1 id="sec-2-app-overview">XRD Parameter Analyzer</h1>
+
+<p>This section summarizes the main formulas and crystallographic rules implemented in <code>xrd_app.py</code>.</p>
+
+<h2 id="sec-2-braggs-law">2. Bragg's Law</h2>
+
+<p><strong>Formula:</strong></p>
+$$n\lambda = 2d\sin\theta \quad (n=1)$$
+
+<p><strong>Where:</strong></p>
+<ul>
+  <li><strong>&lambda;</strong> = X-ray wavelength (&Aring;)</li>
+  <li><strong>d</strong> = interplanar spacing (&Aring;)</li>
+  <li><strong>&theta;</strong> = Bragg angle, half of the measured 2&theta;</li>
+</ul>
+
+<h3 id="sec-2-1-uses-in-code">2.1 Uses in the code</h3>
+
+<p><strong>d &rarr; &theta;</strong>: predicts where a peak should appear:</p>
+$$\theta = \arcsin\left(\frac{\lambda}{2d}\right)$$
+<p>Then the plotted peak position is 2&theta;. Implemented in <code>calculate_bragg_angle(wavelength, d_spacing)</code>. If $\lambda/(2d) > 1$, the reflection is physically unreachable at that wavelength and the function returns <code>None</code>.</p>
+<p><strong>&theta; &rarr; d</strong> is not used directly, but the inverse relation is used when converting a measured pattern from one wavelength to another.</p>
+
+<h2 id="sec-3-triclinic-d-spacing">3. Interplanar Spacing: General Triclinic Formula</h2>
+
+<p>Because triclinic is the lowest-symmetry crystal system, its $d$-spacing formula is the most general one and can also describe higher-symmetry systems by applying symmetry constraints such as $\alpha = \beta = \gamma = 90^\circ$. For this reason, the code implements only the triclinic case in <code>CrystalSystemCalculator.triclinic</code>.</p>
+
+<h3 id="sec-3-1-unit-cell-volume">3.1 Unit-cell volume</h3>
+$$V = abc\sqrt{1 - \cos^2\alpha - \cos^2\beta - \cos^2\gamma + 2\cos\alpha\cos\beta\cos\gamma}$$
+
+<h3 id="sec-3-2-reciprocal-spacing">3.2 Reciprocal spacing</h3>
+$$\frac{1}{d^2} = \frac{h^2b^2c^2\sin^2\alpha + k^2a^2c^2\sin^2\beta + l^2a^2b^2\sin^2\gamma + 2hkabc^2(\cos\alpha\cos\beta - \cos\gamma) + 2kla^2bc(\cos\beta\cos\gamma - \cos\alpha) + 2hlab^2c(\cos\alpha\cos\gamma - \cos\beta)}{V^2}$$
+
+<p><strong>Where:</strong></p>
+<ul>
+  <li><strong>a, b, c</strong> = unit-cell edge lengths</li>
+  <li><strong>&alpha;, &beta;, &gamma;</strong> = unit-cell angles</li>
+  <li><strong>h, k, l</strong> = Miller indices</li>
+</ul>
+
+<p>If the square-root term in the volume expression becomes negative due to invalid geometry, it is clamped to zero. If $1/d^2 \le 0$, the reflection is treated as nonexistent, with $d = \infty$. Implemented in <code>CrystalSystemCalculator.triclinic(h, k, l, a, b, c, alpha_deg, beta_deg, gamma_deg)</code>.</p>
+
+<h2 id="sec-4-systematic-absences">4. Systematic Absences</h2>
+
+<p>A reflection allowed by Bragg's law may still be absent because of crystal symmetry. These are called <strong>systematic absences</strong>. The program checks three independent sources of absence; a reflection is marked absent if any rule forbids it.<sup><a href="#ref-4">[4]</a></sup></p>
+
+<h3 id="sec-4-1-lattice-centering">4.1 Lattice Centering</h3>
+<table>
+  <tr><th>Lattice type</th><th>Symbol</th><th>Condition for reflection to be allowed</th></tr>
+  <tr><td>Primitive</td><td><strong>P</strong></td><td>always allowed</td></tr>
+  <tr><td>Body-centered</td><td><strong>I</strong></td><td>$h+k+l = 2n$</td></tr>
+  <tr><td>Face-centered</td><td><strong>F</strong></td><td>$h, k, l$ all even or all odd</td></tr>
+  <tr><td>A-centered</td><td><strong>A</strong></td><td>$k+l = 2n$</td></tr>
+  <tr><td>B-centered</td><td><strong>B</strong></td><td>$h+l = 2n$</td></tr>
+  <tr><td>C-centered</td><td><strong>C</strong></td><td>$h+k = 2n$</td></tr>
+  <tr><td>H-centered (hexagonal obverse)</td><td><strong>H</strong></td><td>$(h-k) \bmod 3 = 0$</td></tr>
+  <tr><td>R-centered, obverse setting</td><td><strong>R (obv)</strong></td><td>$(-h+k+l) \bmod 3 = 0$</td></tr>
+  <tr><td>R-centered, reverse setting</td><td><strong>R (rev)</strong></td><td>$(h-k+l) \bmod 3 = 0$</td></tr>
+</table>
+<p>Implemented in <code>lattice_forbidden(h, k, l, lattice_type)</code>.</p>
+
+<h3 id="sec-4-2-screw-axes">4.2 Screw Axes</h3>
+<p>A screw axis affects only <strong>axial reflections</strong> along its own axis: $h00$ for the $a$-axis, $0k0$ for the $b$-axis, and $00l$ for the $c$-axis. For such reflections, the index along the screw axis must satisfy:</p>
+<table>
+  <tr><th>Screw axis</th><th>Condition for the axial index to be allowed</th></tr>
+  <tr><td>$2_1, 4_2, 6_3$</td><td>index is even</td></tr>
+  <tr><td>$3_1, 3_2, 6_2, 6_4$</td><td>index mod 3 = 0</td></tr>
+  <tr><td>$4_1, 4_3$</td><td>index mod 4 = 0</td></tr>
+  <tr><td>$6_1, 6_5$</td><td>index mod 6 = 0</td></tr>
+</table>
+<p>Implemented in <code>screw_axis_forbidden(h, k, l, axis, screw_rule)</code>.</p>
+
+<h3 id="sec-4-3-glide-planes">4.3 Glide Planes</h3>
+<p>A glide plane perpendicular to an axis affects only <strong>zonal reflections</strong> with that axis index equal to zero: $0kl$ perpendicular to $a$, $h0l$ perpendicular to $b$, and $hk0$ perpendicular to $c$. For the remaining two indices $u$ and $v$:</p>
+<table>
+  <tr><th>Glide type</th><th>Condition for u, v to be allowed</th></tr>
+  <tr><td>a-glide</td><td>$u$ is even</td></tr>
+  <tr><td>b-glide</td><td>index along $b$ is even</td></tr>
+  <tr><td>c-glide</td><td>index along $c$ is even</td></tr>
+  <tr><td>n-glide</td><td>$u+v$ is even</td></tr>
+  <tr><td>d-glide</td><td>$u+v$ is divisible by 4</td></tr>
+</table>
+<p>Implemented in <code>glide_plane_forbidden(h, k, l, plane_perp_axis, glide_rule)</code>.</p>
+
+<h3 id="sec-4-4-combining-rules">4.4 Combining the Rules</h3>
+<p>A reflection is classified as:</p>
+<ul>
+  <li><strong>absent</strong> if <code>lattice_forbidden</code> OR <code>screw_axis_forbidden</code> OR <code>glide_plane_forbidden</code></li>
+  <li><strong>allowed</strong> otherwise</li>
+</ul>
+<p>Implemented in <code>systematic_absence_reasons(...)</code> and <code>classify_reflection(...)</code>.</p>
+
+<h2 id="sec-5-wavelength-conversion">5. Wavelength Conversion of a Measured Pattern</h2>
+
+<p>When a pattern measured at wavelength $\lambda_1$ needs to be displayed as if it were measured at wavelength $\lambda_2$ &mdash; for example, converting Cu K&alpha;&#8321; data to Co K&alpha; &mdash; the $d$-spacing of each peak remains physically constant. Bragg's law is therefore applied twice:</p>
+$$\lambda_1 = 2d\sin\theta_1, \quad \lambda_2 = 2d\sin\theta_2$$
+<p>so</p>
+$$\sin\theta_2 = \left(\frac{\lambda_2}{\lambda_1}\right)\sin\theta_1$$
+<p>and therefore</p>
+$$\theta_2 = \arcsin\left[\left(\frac{\lambda_2}{\lambda_1}\right)\sin\theta_1\right]$$
+<p>which gives</p>
+$$2\theta_2 = 2\arcsin\left[\left(\frac{\lambda_2}{\lambda_1}\right)\sin\left(\frac{2\theta_1}{2}\right)\right]$$
+<p>If $|(\lambda_2/\lambda_1)\sin\theta_1| > 1$, the peak has no valid angle at the new wavelength and is marked invalid (<code>NaN</code>). Implemented in <code>_convert_two_theta_by_wavelength(two_theta_deg, lam_from, lam_to)</code>.</p>
+
+<h2 id="sec-6-zero-shift">6. Zero-Shift Correction</h2>
+<p>A simple additive correction is applied to compensate for instrument misalignment:</p>
+$$2\theta_{\text{corrected}} = 2\theta_{\text{converted}} + \Delta 2\theta$$
+<p>where $\Delta 2\theta$ is the zero-shift offset in degrees. Applied throughout <code>compute_and_plot()</code>, <code>export_to_txt()</code>, and <code>save_project()</code>.</p>
+
+<h2 id="sec-7-overlay-window">7. Overlay Window</h2>
+<p>These are display-only transformations used for comparing multiple curves; they are not physical formulas.</p>
+
+<h3 id="sec-7-1-normalization">7.1 Normalization</h3>
+$$y_{\text{norm}} = \frac{y - y_{\min}}{y_{\max} - y_{\min}}$$
+
+<h3 id="sec-7-2-vertical-scaling">7.2 Vertical scaling and shifting</h3>
+$$y_{\text{display}} = y \cdot \text{scale} + y_{\text{shift}}$$
+
+<h3 id="sec-7-3-drag-to-scale">7.3 Interactive drag-to-scale</h3>
+<p>Dragging a curve up or down rescales it so its peak reaches the new height:</p>
+$$\text{scale} = \frac{\text{peak\_value} + y_{\text{shift}}}{\text{peak\_value}}$$
+<p>Implemented in <code>_compute_display_y()</code> and <code>_on_b_window_motion()</code>.</p>
+
+<h2 id="sec-8-formula-function-map">8. Formula to Function Map</h2>
+<table>
+  <tr><th>Formula / Rule</th><th>Function in code</th><th>Reference section</th></tr>
+  <tr><td>Bragg's Law (d &rarr; &theta;)</td><td><code>calculate_bragg_angle()</code></td><td><a href="#sec-2-braggs-law">&sect;2</a></td></tr>
+  <tr><td>Triclinic d-spacing and cell volume</td><td><code>CrystalSystemCalculator.triclinic()</code></td><td><a href="#sec-3-triclinic-d-spacing">&sect;3</a></td></tr>
+  <tr><td>Lattice centering absences</td><td><code>lattice_forbidden()</code></td><td><a href="#sec-4-1-lattice-centering">&sect;4.1</a></td></tr>
+  <tr><td>Screw-axis absences</td><td><code>screw_axis_forbidden()</code></td><td><a href="#sec-4-2-screw-axes">&sect;4.2</a></td></tr>
+  <tr><td>Glide-plane absences</td><td><code>glide_plane_forbidden()</code></td><td><a href="#sec-4-3-glide-planes">&sect;4.3</a></td></tr>
+  <tr><td>Combined absence classification</td><td><code>systematic_absence_reasons()</code>, <code>classify_reflection()</code></td><td><a href="#sec-4-4-combining-rules">&sect;4.4</a></td></tr>
+  <tr><td>Wavelength conversion (&lambda;&#8321; &rarr; &lambda;&#8322;)</td><td><code>_convert_two_theta_by_wavelength()</code></td><td><a href="#sec-5-wavelength-conversion">&sect;5</a></td></tr>
+  <tr><td>Zero-shift correction</td><td>applied inline in <code>compute_and_plot()</code></td><td><a href="#sec-6-zero-shift">&sect;6</a></td></tr>
+  <tr><td>Overlay normalization / scaling</td><td><code>_compute_display_y()</code></td><td><a href="#sec-7-overlay-window">&sect;7</a></td></tr>
+</table>
+
+<p><a href="#top">Back to top</a></p>
+
+<hr>
+
+<h2 id="sec-references">References</h2>
+<ol class="ref-list">
+  <li id="ref-1">Bragg's Law and Diffraction Geometry, Georgia Tech MSE Wiki. <a href="https://millwiki.mse.gatech.edu/index.php?title=Bragg's_Law_and_Diffraction_Geometry" target="_blank" rel="noopener">millwiki.mse.gatech.edu</a></li>
+  <li id="ref-2">X-Ray Diffraction (XRD), Anton Paar Wiki. <a href="https://wiki.anton-paar.com/en/x-ray-diffraction-xrd/" target="_blank" rel="noopener">wiki.anton-paar.com</a></li>
+  <li id="ref-3">X-ray diffraction, Wikipedia. <a href="https://en.wikipedia.org/wiki/X-ray_diffraction" target="_blank" rel="noopener">en.wikipedia.org</a></li>
+  <li id="ref-4">Systematic Absences, Crystallography course notes, IQFR-CSIC. <a href="https://www.xtal.iqf.csic.es/Cristalografia/parte_07_2-en.html" target="_blank" rel="noopener">xtal.iqf.csic.es</a></li>
+</ol>
+
+</body>
+</html>
